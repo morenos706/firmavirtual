@@ -1,5 +1,5 @@
 'use client';
-import { Suspense, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Lock, Mail } from 'lucide-react';
 import { Button, Logo } from '@/components/ui';
@@ -50,6 +50,19 @@ function LoginForm() {
   );
 }
 
+function SetupHint() {
+  const [needs, setNeeds] = useState(false);
+  useEffect(() => {
+    apiFetch<{ needsSetup: boolean }>('/api/setup').then((r) => setNeeds(r.needsSetup)).catch(() => {});
+  }, []);
+  if (!needs) return null;
+  return (
+    <p className="mt-4 rounded-lg bg-[#FFF3F0] p-3 text-sm text-[#B4483A]">
+      La plataforma aún no tiene administrador. <a href="/instalar" className="font-semibold underline">Realizar la instalación inicial</a>
+    </p>
+  );
+}
+
 export default function LoginPage() {
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
@@ -80,6 +93,7 @@ export default function LoginPage() {
           <Suspense>
             <LoginForm />
           </Suspense>
+          <SetupHint />
         </div>
       </div>
     </div>

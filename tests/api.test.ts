@@ -17,6 +17,7 @@ import { POST as resendPost } from '@/app/api/records/[id]/resend/route';
 import { POST as startPost } from '@/app/api/public/r/[token]/start/route';
 import { GET as verifyGet } from '@/app/api/public/verify/[code]/route';
 import { POST as webhookPost } from '@/app/api/webhooks/email/route';
+import { GET as setupGet, POST as setupPost } from '@/app/api/setup/route';
 import { prisma } from '@/lib/db';
 import { eventInput, makeUser, registerParticipant, resetDb } from './helpers';
 
@@ -144,6 +145,20 @@ describe('API: autenticación, CSRF y permisos', () => {
     const v = await (await verifyGet(req(`/api/public/verify/${r1.evidenceCode}`), ctx({ code: r1.evidenceCode }))).json();
     expect(v.found).toBe(true);
     expect(JSON.stringify(v)).not.toContain(r1.data.documentNumber);
+  });
+
+  it('instalación inicial desde el navegador: solo sin administradores y con código si está definido', async () => {
+    expect((await (await setupGet(req('/api/setup'), ctx({}))).json()).needsSetup).toBe(true);
+    process.env.SETUP_TOKEN = 'codigo-instalacion-123';
+    const body = { companyName: 'PREBEL S.A.', name: 'Admin Prebel', email: 'admin@prebel.test', password: 'Clave-Segura-2026' };
+    expect((await setupPost(req('/api/setup', { method: 'POST', body: { ...body, setupToken: 'malo' } }), ctx({}))).status).toBe(403);
+    expect((await setupPost(req('/api/setup', { method: 'POST', body: { ...body, setupToken: 'codigo-instalacion-123' } }), ctx({}))).status).toBe(201);
+    delete process.env.SETUP_TOKEN;
+    expect((await setupPost(req('/api/setup', { method: 'POST', body: { ...body, email: 'otro@prebel.test' } }), ctx({}))).status).toBe(409);
+    expect((await (await setupGet(req('/api/setup'), ctx({}))).json()).needsSetup).toBe(false);
+    const cookie = await loginAs('admin@prebel.test');
+    expect(cookie).toContain('fqr_session=');
+    expect((await prisma.appSettings.findUniqueOrThrow({ where: { id: 1 } })).logoPath).toBe('branding/prebel-logo-azul.png');
   });
 
   it('webhook de proveedor exige secreto compartido', async () => {

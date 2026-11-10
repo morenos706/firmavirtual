@@ -29,7 +29,7 @@ export async function GET() {
       await prisma.$queryRaw`SELECT 1`;
       try {
         admins = await prisma.user.count({ where: { role: { name: 'ADMIN' }, active: true } });
-        if (admins === 0) problems.push('No hay administradores: ejecute la carga inicial (npm run db:seed) contra esta base de datos.');
+        if (admins === 0) problems.push('No hay administradores: abra /instalar para crear el primer administrador.');
       } catch {
         db = 'sin tablas';
         problems.push('La base de datos no tiene las tablas: ejecute las migraciones (npx prisma migrate deploy).');

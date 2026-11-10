@@ -1,12 +1,28 @@
 # Guía de despliegue
 
-## Opción 0 — Vercel
+## Opción 0 — Vercel + Supabase (recomendada)
+
+**Supabase** (un solo proveedor para base de datos y archivos):
+1. supabase.com → *New project* (región São Paulo, guarde la contraseña de la base de datos).
+2. *Connect* → copie:
+   - **Transaction pooler** (puerto 6543) → `DATABASE_URL`, agregando al final `?pgbouncer=true&connection_limit=1`
+   - **Session pooler** (puerto 5432) → `DIRECT_URL`
+3. *Storage* → *New bucket* `firmaqr` (**privado**, sin marcar *Public*).
+4. *Project Settings → Storage → S3 Connection* → *New access key*. Copie *Endpoint*, *Region*, *Access key ID* y *Secret access key*.
+
+**Vercel** → Settings → Environment Variables:
+`DATABASE_URL`, `DIRECT_URL`, `APP_URL`, `APP_ENCRYPTION_KEY`, `HASH_PEPPER`, `OTP_SECRET`, `CRON_SECRET`, `SETUP_TOKEN`,
+`STORAGE_DRIVER=s3`, `S3_BUCKET=firmaqr`, `S3_ENDPOINT` (https://<ref>.supabase.co/storage/v1/s3), `S3_REGION`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_FORCE_PATH_STYLE=true`, y el proveedor de correo.
+
+**Redeploy** (crea las tablas) → abra `/api/health` → abra `/instalar` y cree el administrador con el `SETUP_TOKEN`.
+
+## Opción 0b — Vercel con otros proveedores
 
 1. **Base de datos**: cree PostgreSQL en Vercel → Storage (Neon) o Supabase. Copie la URL *pooled* en `DATABASE_URL` y la URL *directa* (sin pooler) en `DIRECT_URL`.
 2. **Almacenamiento**: Vercel no conserva archivos en disco. Cree un bucket **privado** S3 compatible (AWS S3 o Cloudflare R2) y configure `STORAGE_DRIVER=s3` y `S3_*`. No use almacenamiento con URL públicas: las firmas y comprobantes contienen datos personales.
 3. **Variables** (Settings → Environment Variables): `DATABASE_URL`, `DIRECT_URL`, `APP_URL` (https://SU-PROYECTO.vercel.app), `APP_ENCRYPTION_KEY`, `HASH_PEPPER`, `OTP_SECRET`, `STORAGE_DRIVER`, `S3_*`, `EMAIL_PROVIDER` (recomendado `resend`), `EMAIL_API_KEY`, `EMAIL_FROM`, `EMAIL_FROM_NAME`, `EMAIL_WEBHOOK_SECRET`, `CRON_SECRET`.
 4. **Despliegue**: el script `vercel-build` ejecuta `prisma migrate deploy` antes de compilar (crea las tablas y los controles de integridad).
-5. **Carga inicial** (una vez, desde su computador, apuntando a la base de datos y al bucket de producción):
+5. **Primer administrador**: abra `/instalar` (pide `SETUP_TOKEN` si lo definió). Alternativa por consola, desde su computador:
    `DATABASE_URL=... DIRECT_URL=... STORAGE_DRIVER=s3 S3_...=... SEED_ADMIN_EMAIL=... SEED_ADMIN_PASSWORD=... npm run db:seed`
 6. **Verificación**: abra `https://SU-PROYECTO.vercel.app/api/health`; debe responder `"status":"ok"`. Si no, la lista `problems` indica qué falta.
 7. **Correos**: se envían al cerrar el evento con `after()`; los reintentos los procesa `/api/cron/email-queue` (en `vercel.json` una vez al día, límite del plan Hobby; en Pro cambie a `*/5 * * * *`) y también cada vez que se abre el panel de comprobantes o se pulsa *Procesar cola ahora*.
