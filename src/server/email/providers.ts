@@ -41,7 +41,7 @@ const fileProvider: EmailProvider = {
   },
 };
 
-let transporter: nodemailer.Transporter | null = null;
+let transporter: ReturnType<typeof nodemailer.createTransport> | null = null;
 /** SMTP seguro (STARTTLS/TLS). También sirve para Amazon SES vía su interfaz SMTP. */
 const smtpProvider: EmailProvider = {
   name: 'smtp',

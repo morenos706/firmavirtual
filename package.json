@@ -29,13 +29,13 @@
     "jszip": "^3.10.2",
     "lucide-react": "^0.577.0",
     "next": "^15.5.29",
-    "nodemailer": "^6.10.1",
+    "nodemailer": "^10.5.0",
     "pdfkit": "^0.17.2",
     "qrcode": "^1.5.4",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "signature_pad": "^5.1.4",
-    "zod": "^3.25.76"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@types/node": "^22.20.5",

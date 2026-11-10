@@ -8,7 +8,7 @@ const schema = z.object({
   pointCount: z.number().int().min(0).max(1_000_000),
   drawDurationMs: z.number().int().min(0).max(3_600_000).optional().nullable(),
   pointerType: z.string().max(20).optional().nullable(),
-  device: z.record(z.union([z.string().max(200), z.number(), z.boolean()])).optional().nullable(),
+  device: z.record(z.string(), z.union([z.string().max(200), z.number(), z.boolean()])).optional().nullable(),
 });
 export const POST = api(async (req) => {
   enforceRateLimit(req, 'reg-complete', 20, 10 * 60_000);
