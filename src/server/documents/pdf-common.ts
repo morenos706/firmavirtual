@@ -46,7 +46,7 @@ export function drawLogo(
   logo: Buffer | null | undefined,
   companyName: string,
   box: { x: number; y: number; w: number; h: number },
-  color = '#176B52',
+  color = '#40637D',
 ) {
   if (logo) {
     try {

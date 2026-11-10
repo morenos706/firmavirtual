@@ -141,15 +141,18 @@ export default function RegisterPage({ params }: { params: Promise<{ token: stri
 
   return (
     <Shell company={pub.company}>
-      <div className="rounded-2xl bg-navy p-5 text-white shadow-lg">
-        <p className="text-xs font-semibold uppercase tracking-wider text-[#5FC79F]">Registro de asistencia</p>
+      <div className="overflow-hidden rounded-2xl bg-brand text-white shadow-lg">
+        <div className="color-bar h-1.5" aria-hidden />
+        <div className="p-5">
+        <p className="text-xs font-semibold uppercase tracking-wider text-sec2">Registro de asistencia</p>
         <h1 className="mt-1 text-xl font-bold leading-snug sm:text-2xl">{ev.name}</h1>
-        <p className="mt-1 text-sm text-slate-300">{ev.program} · {ev.topic}</p>
-        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-300">
+        <p className="mt-1 text-sm text-sand">{ev.program} · {ev.topic}</p>
+        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-sand/90">
           <span className="inline-flex items-center gap-1"><CalendarDays className="h-3.5 w-3.5" /> {fmtDay(ev.date)}</span>
           <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> {ev.startTime}–{ev.endTime}</span>
           <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> {ev.location}</span>
           <span className="inline-flex items-center gap-1"><UserRound className="h-3.5 w-3.5" /> {ev.trainer}</span>
+        </div>
         </div>
       </div>
 
@@ -157,7 +160,7 @@ export default function RegisterPage({ params }: { params: Promise<{ token: stri
         <Notice icon={<XCircle className="h-10 w-10 text-slate-400" />} title="Registro no disponible" text={pub.availability.reason ?? ''} />
       ) : done ? (
         <div className="card mt-5 p-6 text-center">
-          <CheckCircle2 className="mx-auto h-14 w-14 text-brand" />
+          <CheckCircle2 className="mx-auto h-14 w-14 text-sec4" />
           <h2 className="mt-3 text-xl font-bold text-navy">¡Asistencia registrada!</h2>
           <p className="mt-2 text-sm text-slate-600">Su firma electrónica quedó registrada con el identificador:</p>
           <p className="mt-2 rounded-lg bg-mist px-3 py-2 font-mono text-lg font-bold tracking-wider text-navy">{done.evidenceCode}</p>
@@ -168,7 +171,7 @@ export default function RegisterPage({ params }: { params: Promise<{ token: stri
           <ol className="mt-5 flex items-center gap-1" aria-label="Progreso">
             {STEPS.map((s, i) => (
               <li key={s} className="flex flex-1 flex-col items-center gap-1">
-                <span className={`h-1.5 w-full rounded-full ${i <= step ? 'bg-brand' : 'bg-slate-200'}`} />
+                <span className={`h-1.5 w-full rounded-full ${i <= step ? 'bg-sec4' : 'bg-slate-200'}`} />
                 <span className={`hidden text-[11px] font-semibold sm:block ${i === step ? 'text-brand' : 'text-slate-400'}`}>{s}</span>
               </li>
             ))}
@@ -274,6 +277,7 @@ function Shell({ children, company }: { children: React.ReactNode; company?: { n
   return (
     <div className="min-h-screen bg-mist">
       <header className="border-b border-slate-200 bg-white">
+        <div className="color-bar h-1" aria-hidden />
         <div className="mx-auto flex max-w-xl items-center justify-between px-4 py-3">
           {company?.hasLogo ? (
             // eslint-disable-next-line @next/next/no-img-element

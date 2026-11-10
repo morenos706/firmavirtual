@@ -1,6 +1,8 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import crypto from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
 import { DEFAULT_DATA_TREATMENT, DEFAULT_SIGNATURE_AGREEMENT } from '../src/lib/legal-defaults';
 
 const prisma = new PrismaClient();
@@ -8,11 +10,18 @@ const prisma = new PrismaClient();
 async function main() {
   await prisma.role.upsert({ where: { name: 'ADMIN' }, update: {}, create: { name: 'ADMIN', label: 'Administrador', description: 'Acceso total: usuarios, configuración, auditoría y todos los eventos' } });
   await prisma.role.upsert({ where: { name: 'ORGANIZER' }, update: {}, create: { name: 'ORGANIZER', label: 'Organizador', description: 'Crea y gestiona sus propios eventos' } });
-  await prisma.appSettings.upsert({
-    where: { id: 1 },
-    update: {},
-    create: { id: 1, companyName: process.env.SEED_COMPANY_NAME || 'Mi Empresa S.A.S.' },
-  });
+  // Identidad institucional por defecto: Manual de Marca Prebel (logotipo Azul Prebel, versión preferente).
+  const companyName = process.env.SEED_COMPANY_NAME || 'PREBEL S.A.';
+  const settings = await prisma.appSettings.upsert({ where: { id: 1 }, update: {}, create: { id: 1, companyName } });
+  if (settings.companyName === 'Mi Empresa S.A.S.') await prisma.appSettings.update({ where: { id: 1 }, data: { companyName } });
+  const brandLogo = path.join(process.cwd(), 'assets', 'brand', 'prebel-logo-azul.png');
+  if (!settings.logoPath && process.env.SEED_SKIP_BRAND_LOGO !== 'true' && fs.existsSync(brandLogo)) {
+    const storage = path.resolve(process.env.STORAGE_DIR || './storage');
+    fs.mkdirSync(path.join(storage, 'branding'), { recursive: true });
+    fs.copyFileSync(brandLogo, path.join(storage, 'branding', 'prebel-logo-azul.png'));
+    await prisma.appSettings.update({ where: { id: 1 }, data: { logoPath: 'branding/prebel-logo-azul.png', logoMime: 'image/png' } });
+    console.log('Logo institucional configurado (Manual de Marca Prebel).');
+  }
 
   for (const [type, t] of [
     ['SIGNATURE_AGREEMENT', DEFAULT_SIGNATURE_AGREEMENT],

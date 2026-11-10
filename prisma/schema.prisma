@@ -161,6 +161,7 @@ model AppSettings {
   formatVersion     String   @default("V0.6") @map("format_version")
   sheetTitle        String   @default("REGISTRO DE ASISTENCIA") @map("sheet_title")
   sheetShowSignature Boolean @default(true) @map("sheet_show_signature")
+  sheetLegalNotice  String?  @map("sheet_legal_notice")
   receiptFooterNote String?  @map("receipt_footer_note")
   supportEmail      String?  @map("support_email")
   updatedAt         DateTime @updatedAt @map("updated_at")

@@ -68,6 +68,13 @@ Fecha: 10/11/2026 · Rama: `claude/happy-goodall-3wplzq`
 4. **Almacenamiento local**: para alta disponibilidad, migrar `src/lib/storage.ts` a S3/Azure Blob con cifrado en reposo.
 5. **Dependencias**: `npm audit` reporta avisos en dependencias transitivas de herramientas (Prisma CLI → deepmerge-ts, PostCSS interno de Next.js, uuid de ExcelJS) sin corrección compatible publicada; nodemailer y zod se actualizaron a versiones sin avisos.
 6. **Textos jurídicos**: base de trabajo; requieren revisión de un abogado colombiano.
-7. **Logo de Prebel**: no se incluyó por defecto; el administrador puede cargarlo si la empresa cuenta con autorización.
+7. **Tipografía Acid Grotesk**: es de licencia comercial y no se incluye; se usan Work Sans (web) y Arial/Liberation Sans (PDF), ambas autorizadas por el manual como complementaria y sustituta.
 8. **Anulación de registros firmados**: la base de datos admite la anulación justificada, pero aún no existe una pantalla para hacerlo.
 9. **Pruebas E2E**: usan el Playwright preinstalado del entorno; en otra máquina instale `playwright` y Chromium.
+
+## Ajustes posteriores solicitados
+
+- **Columna «Firma»** en la planilla oficial con la imagen de la firma de cada asistente (configurable).
+- **Manual de Marca Prebel** aplicado: paleta corporativa y secundaria, barra de color, logotipo oficial (versiones azul y blanco), Work Sans/Arial. Ver `docs/IDENTIDAD_VISUAL.md`.
+- **Salvedad jurídica sobre el uso de la firma electrónica** al final de cada planilla, con remisión en cada pie de página; texto configurable. Ver `docs/FORMATO_INSTITUCIONAL.md`.
+- Pruebas: 32/32 automatizadas (las de planilla verifican la presencia y ubicación de la salvedad) y E2E en navegador aprobada.

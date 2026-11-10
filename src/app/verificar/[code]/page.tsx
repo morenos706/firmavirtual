@@ -41,6 +41,7 @@ export default function VerifyPage({ params }: { params: Promise<{ code: string 
   return (
     <div className="min-h-screen bg-mist px-4 py-8">
       <div className="mx-auto max-w-2xl">
+        <div className="color-bar mb-4 h-1.5 rounded" aria-hidden />
         <Link href="/verificar"><Logo className="text-xl text-navy" /></Link>
         {!v ? <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-brand" /></div> : !v.found ? (
           <div className="card mt-6 p-8 text-center">
@@ -51,7 +52,7 @@ export default function VerifyPage({ params }: { params: Promise<{ code: string 
         ) : (
           <>
             <div className={`card mt-6 overflow-hidden`}>
-              <div className={`flex items-center gap-3 p-5 text-white ${v.status === 'VIGENTE' ? 'bg-brand' : 'bg-red-600'}`}>
+              <div className={`flex items-center gap-3 p-5 text-white ${v.status === 'VIGENTE' ? 'bg-sec3' : 'bg-red-600'}`}>
                 <ShieldCheck className="h-8 w-8" />
                 <div>
                   <p className="text-xs uppercase tracking-wider opacity-80">{v.typeLabel}</p>

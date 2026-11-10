@@ -15,8 +15,12 @@
  * Ajuste solicitado por la empresa: columna adicional "Firma" a la derecha con la imagen de la firma
  * manuscrita de cada asistente (configurable en Configuración → Formato). Se mantiene el ancho total de
  * la tabla, el orden de las columnas originales, el alto de fila y la distribución de 25/32 filas.
+ *
+ * Salvedad jurídica: al final del documento (después de la última fila, o en una página adicional si no
+ * cabe) se imprime la SALVEDAD SOBRE EL USO DE LA FIRMA ELECTRÓNICA, y cada pie de página remite a ella.
  */
 import { F, createLetterDoc, drawLogo, fitFontSize, renderToBuffer, tw } from './pdf-common';
+import { DEFAULT_SHEET_LEGAL_NOTICE, SHEET_LEGAL_TITLE } from '@/lib/legal-sheet';
 
 export type SheetRow = {
   sequence: number;
@@ -56,6 +60,8 @@ export type SheetData = {
   generatedAt: string;
   /** Agrega la columna "Firma" con la imagen de la firma manuscrita de cada asistente (por defecto: sí). */
   showSignature?: boolean;
+  /** Salvedad jurídica sobre el uso de la firma electrónica (marcadores {{EMPRESA}} y {{URL_VERIFICACION}}). */
+  legalNotice?: string | null;
 };
 
 // ── Geometría (pt) ───────────────────────────────────────────────────────────
@@ -95,7 +101,12 @@ const MIN_FONT = 5.5;
 const CODE_FONT = 5;
 
 type MeasuredRow = { row: SheetRow | null; number: number; height: number; sizes?: number[] };
-export type SheetPage = { rows: MeasuredRow[]; tableTop: number };
+export type SheetPage = { rows: MeasuredRow[]; tableTop: number; noticeTop?: number };
+
+const NOTICE_GAP = 8;
+const NOTICE_FONT = 6.1;
+const NOTICE_PAD = 6;
+const NOTICE_TITLE_H = 13;
 
 /**
  * Mide una fila. Cada celda usa 7.5 pt y, si el texto no cabe en el alto estándar del formato,
@@ -125,7 +136,7 @@ function measureRow(doc: PDFKit.PDFDocument, r: SheetRow): { height: number; siz
  * Distribuye las filas en páginas respetando el formato (25 filas en la primera página y 32 en las
  * siguientes), sin partir filas entre páginas y completando la última página con filas vacías anuladas.
  */
-export function paginate(doc: PDFKit.PDFDocument, rows: SheetRow[], fillBlankRows = true): SheetPage[] {
+export function paginate(doc: PDFKit.PDFDocument, rows: SheetRow[], fillBlankRows = true, noticeH = 0): SheetPage[] {
   const pages: SheetPage[] = [];
   let current: SheetPage = { rows: [], tableTop: TABLE_TOP_FIRST };
   let y = current.tableTop + HEADER_ROW_H;
@@ -143,15 +154,50 @@ export function paginate(doc: PDFKit.PDFDocument, rows: SheetRow[], fillBlankRow
     current.rows.push({ row: r, number: r.sequence ?? n, height: h, sizes });
     y += h;
   }
+  // La salvedad jurídica se ubica después de la última fila; si no cabe, va en una página adicional.
+  const reserve = noticeH > 0 ? NOTICE_GAP + noticeH : 0;
+  const noticeFits = y + reserve <= TABLE_BOTTOM_LIMIT + 0.01;
+  const limit = noticeFits ? TABLE_BOTTOM_LIMIT - reserve : TABLE_BOTTOM_LIMIT;
   if (fillBlankRows) {
     let next = (current.rows.at(-1)?.number ?? n) + 1;
-    while (current.rows.length < capacity() && y + MIN_ROW_H <= TABLE_BOTTOM_LIMIT + 0.01) {
+    while (current.rows.length < capacity() && y + MIN_ROW_H <= limit + 0.01) {
       current.rows.push({ row: null, number: next++, height: MIN_ROW_H });
       y += MIN_ROW_H;
     }
   }
+  if (noticeH > 0 && noticeFits) current.noticeTop = y + NOTICE_GAP;
   pages.push(current);
+  if (noticeH > 0 && !noticeFits) pages.push({ rows: [], tableTop: TABLE_TOP_NEXT, noticeTop: TABLE_TOP_NEXT });
   return pages;
+}
+
+function noticeText(d: SheetData) {
+  return (d.legalNotice || DEFAULT_SHEET_LEGAL_NOTICE).replaceAll('{{EMPRESA}}', d.companyName).replaceAll('{{URL_VERIFICACION}}', d.verifyUrl);
+}
+
+function noticeClosing(d: SheetData) {
+  return `Total de asistentes con firma electrónica en esta planilla: ${d.rows.length}. Código de verificación de la planilla: ${d.verificationCode}.`;
+}
+
+function measureNotice(doc: PDFKit.PDFDocument, d: SheetData) {
+  const w = TABLE_W - NOTICE_PAD * 2;
+  doc.font(F.regular).fontSize(NOTICE_FONT);
+  const body = doc.heightOfString(noticeText(d), { width: w, lineGap: 0.4, paragraphGap: 1.5, align: 'justify' });
+  const closing = doc.font(F.bold).heightOfString(noticeClosing(d), { width: w });
+  return NOTICE_TITLE_H + NOTICE_PAD + body + 3 + closing + NOTICE_PAD;
+}
+
+/** Recuadro de la salvedad jurídica (mismo lenguaje visual del formato: encabezado negro, bordes 0,5 pt). */
+function drawNotice(doc: PDFKit.PDFDocument, d: SheetData, top: number, h: number) {
+  const w = TABLE_W - NOTICE_PAD * 2;
+  doc.rect(TABLE_X, top, TABLE_W, NOTICE_TITLE_H).fill('#000000');
+  doc.font(F.bold).fontSize(8).fillColor('#FFFFFF');
+  doc.text(SHEET_LEGAL_TITLE, TABLE_X + (TABLE_W - doc.widthOfString(SHEET_LEGAL_TITLE)) / 2, top + 3, { lineBreak: false });
+  doc.rect(TABLE_X, top, TABLE_W, h).lineWidth(0.5).strokeColor('black').stroke();
+  doc.font(F.regular).fontSize(NOTICE_FONT).fillColor('black');
+  doc.text(noticeText(d), TABLE_X + NOTICE_PAD, top + NOTICE_TITLE_H + NOTICE_PAD, { width: w, lineGap: 0.4, paragraphGap: 1.5, align: 'justify' });
+  doc.font(F.bold).fontSize(NOTICE_FONT).text(noticeClosing(d), TABLE_X + NOTICE_PAD, doc.y + 3, { width: w });
+  doc.fillColor('black');
 }
 
 function drawHeader(doc: PDFKit.PDFDocument, d: SheetData, pageNo: number, total: number) {
@@ -183,6 +229,7 @@ function drawFooter(doc: PDFKit.PDFDocument, d: SheetData) {
     `Cada asistente cuenta con un registro electrónico de asistencia y firma manuscrita electrónica` +
     (d.showSignature ?? true ? ' (columna "Firma")' : '') +
     `, conservados en su expediente digital (código "Exp." bajo el nombre), con autenticación OTP y huella SHA-256. Verificación: ${d.verifyUrl}` +
+    ` · Sujeta a la SALVEDAD SOBRE EL USO DE LA FIRMA ELECTRÓNICA incluida al final del documento.` +
     (d.draft ? ' · VISTA PREVIA — NO ES LA VERSIÓN DEFINITIVA.' : ` · Generada: ${d.generatedAt}`);
   doc.text(note, TABLE_X, TABLE_BOTTOM_LIMIT + 3, { width: TABLE_W * 0.78, lineGap: 0.3 });
   const label = `${d.formatCode} ${d.formatVersion}`;
@@ -326,7 +373,7 @@ function drawTable(doc: PDFKit.PDFDocument, page: SheetPage) {
           const ch = doc.fontSize(CODE_FONT).heightOfString(codeText, { width: w });
           const ty = y + (h - (nh + 0.5 + ch)) / 2;
           doc.fontSize(fs).fillColor('black').text(r.fullName, cx + CELL_PAD_X, ty, { width: w });
-          doc.fontSize(CODE_FONT).fillColor('#176B52').text(codeText, cx + CELL_PAD_X, ty + nh + 0.5, { width: w });
+          doc.fontSize(CODE_FONT).fillColor('#40637D').text(codeText, cx + CELL_PAD_X, ty + nh + 0.5, { width: w });
         } else {
           const t = cells[ci];
           doc.font(F.regular).fontSize(fs).fillColor('black');
@@ -385,7 +432,7 @@ function drawTable(doc: PDFKit.PDFDocument, page: SheetPage) {
 function drawDraftMark(doc: PDFKit.PDFDocument) {
   doc.save();
   doc.rotate(-35, { origin: [PAGE.w / 2, PAGE.h / 2] });
-  doc.font(F.bold).fontSize(54).fillColor('#176B52').fillOpacity(0.08);
+  doc.font(F.bold).fontSize(54).fillColor('#40637D').fillOpacity(0.08);
   const t = 'VISTA PREVIA';
   doc.text(t, PAGE.w / 2 - doc.widthOfString(t) / 2, PAGE.h / 2 - 27, { lineBreak: false });
   doc.restore();
@@ -399,13 +446,15 @@ export async function renderAttendanceSheet(d: SheetData, opts: { fillBlankRows?
     Author: d.companyName,
   });
   setLayout(d.showSignature ?? true);
-  const pages = paginate(doc, d.rows, opts.fillBlankRows ?? true);
+  const noticeH = measureNotice(doc, d);
+  const pages = paginate(doc, d.rows, opts.fillBlankRows ?? true, noticeH);
   pages.forEach((p, i) => {
     doc.addPage({ size: 'LETTER', margin: 0 });
     if (d.draft) drawDraftMark(doc);
     drawHeader(doc, d, i + 1, pages.length);
     if (i === 0) drawTitleAndInfo(doc, d);
-    drawTable(doc, p);
+    if (p.rows.length) drawTable(doc, p);
+    if (p.noticeTop !== undefined) drawNotice(doc, d, p.noticeTop, noticeH);
     drawFooter(doc, d);
   });
   const buffer = await renderToBuffer(doc);
@@ -413,8 +462,9 @@ export async function renderAttendanceSheet(d: SheetData, opts: { fillBlankRows?
 }
 
 /** Solo para pruebas: calcula la paginación sin renderizar. */
-export function computeSheetLayout(rows: SheetRow[], fillBlankRows = true, showSignature = true) {
+export function computeSheetLayout(rows: SheetRow[], fillBlankRows = true, showSignature = true, withNotice = true) {
   setLayout(showSignature);
   const doc = createLetterDoc({ Title: 'layout' });
-  return paginate(doc, rows, fillBlankRows);
+  const d = { companyName: 'Empresa', verifyUrl: 'https://firmaqr/verificar/DOC-XXXX-XXXX-XXXX', verificationCode: 'DOC-XXXX-XXXX-XXXX', rows } as SheetData;
+  return paginate(doc, rows, fillBlankRows, withNotice ? measureNotice(doc, d) : 0);
 }

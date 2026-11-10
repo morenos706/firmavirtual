@@ -53,21 +53,29 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
-      <div className="relative hidden flex-col justify-between overflow-hidden bg-navy p-12 text-white lg:flex">
-        <Logo className="text-2xl" />
+      <div className="relative hidden flex-col justify-between overflow-hidden bg-brand p-12 text-white lg:flex">
+        <div className="color-bar absolute inset-x-0 top-0 h-2" aria-hidden />
+        <div className="flex items-center justify-between">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/brand/prebel-logo-blanco.png" alt="Prebel" className="h-10 w-auto" />
+          <Logo className="text-xl text-sand" />
+        </div>
         <div className="relative z-10 max-w-md">
           <h1 className="text-4xl font-bold leading-tight">Registro digital de asistencia y firma electrónica</h1>
-          <p className="mt-4 text-slate-300">Cree eventos, comparta un código QR y obtenga la planilla oficial con evidencia electrónica de cada firma, autenticación OTP y trazabilidad completa.</p>
+          <p className="mt-4 text-sand/90">Cree eventos, comparta un código QR y obtenga la planilla oficial con evidencia electrónica de cada firma, autenticación OTP y trazabilidad completa.</p>
         </div>
-        <p className="text-xs text-slate-400">Ley 527 de 1999 · Decreto 2364 de 2012 · Ley 1581 de 2012</p>
-        <div className="absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-brand/30 blur-3xl" />
+        <p className="text-xs text-sand/70">Ley 527 de 1999 · Decreto 2364 de 2012 · Ley 1581 de 2012</p>
+        <div className="absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-sec2/25 blur-3xl" />
+        <div className="color-bar absolute inset-x-0 bottom-0 h-2" aria-hidden />
       </div>
       <div className="flex items-center justify-center p-6">
         <div className="w-full max-w-sm">
-          <div className="mb-8 lg:hidden">
-            <Logo className="text-2xl text-navy" />
+          <div className="mb-8 flex items-center justify-between lg:hidden">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/brand/prebel-logo-azul.png" alt="Prebel" className="h-8 w-auto" />
+            <Logo className="text-lg text-navy" />
           </div>
-          <h2 className="text-2xl font-bold text-navy">Bienvenido</h2>
+          <h2 className="text-2xl font-bold text-brand">Bienvenido</h2>
           <p className="mb-6 mt-1 text-sm text-slate-500">Ingrese con su cuenta corporativa.</p>
           <Suspense>
             <LoginForm />

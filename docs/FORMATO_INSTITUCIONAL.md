@@ -37,3 +37,19 @@ Por solicitud de la empresa se agregó una séptima columna **«Firma»** a la d
 ## Referencia a la evidencia electrónica
 
 Bajo cada nombre se imprime «Firma electrónica · Exp. FQR-XXXX-XXXX-XXXX» (código del expediente digital), y el pie de cada página indica el código de verificación de la planilla y la URL de verificación. La imagen de la firma y toda la evidencia técnica se conservan en el expediente individual.
+
+## Salvedad sobre el uso de la firma electrónica
+
+Al final de cada planilla se imprime el recuadro **«SALVEDAD SOBRE EL USO DE LA FIRMA ELECTRÓNICA»** (encabezado negro y bordes de 0,5 pt, como la tabla del formato). Se ubica después de la última fila; si la última página no tiene espacio, se agrega una página con el mismo encabezado institucional. Cada pie de página remite a ella.
+
+Contenido por defecto (configurable en **Configuración → Planilla oficial — Salvedad**, con los marcadores `{{EMPRESA}}` y `{{URL_VERIFICACION}}`):
+
+1. **Naturaleza de las firmas**: no son firmas en tinta sino la representación gráfica de firmas electrónicas (art. 7 Ley 527 de 1999; Decreto 2364 de 2012, compilado en el Decreto 1074 de 2015).
+2. **Mecanismo y atribución**: OTP, aceptación expresa del acuerdo versionado, trazo manuscrito y huella SHA-256; la imagen por sí sola no acredita la identidad, la atribución se sustenta en el expediente digital.
+3. **Alcance**: firma electrónica convenida, apropiada solo para registrar la asistencia; no es firma digital certificada (art. 28 Ley 527 de 1999).
+4. **Original e integridad**: el original es el mensaje de datos conservado (arts. 8, 9 y 12 Ley 527 de 1999); la planilla impresa es una representación verificable con su código; enmiendas o adiciones manuscritas carecen de validez.
+5. **Datos personales**: Ley 1581 de 2012 y Decreto 1377 de 2013.
+
+Cierra con el total de asistentes con firma electrónica y el código de verificación de la planilla. **El texto debe ser revisado y aprobado por un abogado colombiano.**
+
+Efecto en la paginación: las filas siguen la distribución 1–25 / 26–57; cuando la tabla llena la última página (p. ej., 25 o 57 asistentes), la salvedad ocupa una página adicional.

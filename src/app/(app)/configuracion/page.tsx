@@ -5,8 +5,9 @@ import { Badge, Button, Card, Field, Modal, Spinner } from '@/components/ui';
 import { PageHeader } from '@/components/app-shell';
 import { useToast } from '@/components/toast';
 import { apiFetch, errorMessage, fmtDate } from '@/lib/client';
+import { DEFAULT_SHEET_LEGAL_NOTICE, SHEET_LEGAL_TITLE } from '@/lib/legal-sheet';
 
-type S = { companyName: string; companyNit: string | null; logoPath: string | null; formatCode: string; formatVersion: string; sheetTitle: string; sheetShowSignature: boolean; receiptFooterNote: string | null; supportEmail: string | null };
+type S = { companyName: string; companyNit: string | null; logoPath: string | null; formatCode: string; formatVersion: string; sheetTitle: string; sheetShowSignature: boolean; sheetLegalNotice: string | null; receiptFooterNote: string | null; supportEmail: string | null };
 type T = { id: string; type: 'SIGNATURE_AGREEMENT' | 'DATA_TREATMENT'; version: string; title: string; content: string; sha256: string; active: boolean; createdAt: string; _count: { consents: number } };
 const TYPE: Record<string, string> = { SIGNATURE_AGREEMENT: 'Acuerdo de firma electrónica', DATA_TREATMENT: 'Tratamiento de datos personales' };
 
@@ -29,7 +30,7 @@ export default function SettingsPage() {
     setBusy(k);
     try { await fn(); toast('success', ok); await load(); } catch (e) { toast('error', errorMessage(e)); } finally { setBusy(''); }
   };
-  const saveSettings = () => wrap('s', () => apiFetch('/api/settings', { method: 'PUT', body: { ...s, companyNit: s.companyNit || null, receiptFooterNote: s.receiptFooterNote || null, supportEmail: s.supportEmail || '' } }), 'Configuración guardada.');
+  const saveSettings = () => wrap('s', () => apiFetch('/api/settings', { method: 'PUT', body: { ...s, sheetLegalNotice: s.sheetLegalNotice || null, companyNit: s.companyNit || null, receiptFooterNote: s.receiptFooterNote || null, supportEmail: s.supportEmail || '' } }), 'Configuración guardada.');
   const uploadLogo = (f?: File) => {
     if (!f) return;
     const fd = new FormData();
@@ -75,6 +76,12 @@ export default function SettingsPage() {
           <p className="mt-3 text-xs text-slate-500">Use únicamente un logo cuyo uso esté autorizado por la empresa. Aparece en la planilla oficial, los comprobantes, el cartel del QR y el formulario de registro.</p>
         </Card>
       </div>
+
+      <Card title={`Planilla oficial — ${SHEET_LEGAL_TITLE}`} icon={<Scale className="h-4 w-4" />} className="mt-6" actions={<><Button size="sm" variant="secondary" onClick={() => set('sheetLegalNotice', null)}>Restaurar texto por defecto</Button><Button size="sm" loading={busy === 's'} onClick={saveSettings}><Save className="h-4 w-4" /> Guardar</Button></>}>
+        <p className="mb-3 text-sm">Esta salvedad se imprime al final de cada planilla oficial (después de la última fila o en una página adicional) y cada pie de página remite a ella. Marcadores disponibles: <code>{'{{EMPRESA}}'}</code> y <code>{'{{URL_VERIFICACION}}'}</code>. Las planillas ya cerradas conservan el texto con el que fueron generadas.</p>
+        <textarea className="input min-h-[260px] text-sm leading-relaxed" value={s.sheetLegalNotice ?? DEFAULT_SHEET_LEGAL_NOTICE} onChange={(e) => set('sheetLegalNotice', e.target.value === DEFAULT_SHEET_LEGAL_NOTICE ? null : e.target.value)} />
+        <p className="mt-2 text-xs text-amber-800">{s.sheetLegalNotice ? 'Texto personalizado.' : 'Usando el texto por defecto.'} Debe ser revisado y aprobado por un abogado colombiano.</p>
+      </Card>
 
       <Card title="Textos jurídicos versionados" icon={<Scale className="h-4 w-4" />} className="mt-6" actions={<Button size="sm" onClick={() => setDraft({ type: 'SIGNATURE_AGREEMENT', version: '', title: '', content: '' })}><FileText className="h-4 w-4" /> Nueva versión</Button>}>
         <p className="mb-4 rounded-lg bg-amber-50 p-3 text-sm text-amber-900">Los textos por defecto son una base de trabajo y <strong>deben ser revisados por un abogado colombiano</strong>. Cada cambio crea una nueva versión; las aceptaciones anteriores conservan la versión y la huella del texto aceptado. Use <code>{'{{EMPRESA}}'}</code> para insertar el nombre de la empresa.</p>

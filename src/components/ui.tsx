@@ -39,7 +39,7 @@ export function Card({ title, actions, children, className, icon }: { title?: Re
     <section className={clsx('card', className)}>
       {(title || actions) && (
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-5 py-3.5">
-          <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-navy">
+          <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-brand">
             {icon}
             {title}
           </h2>
@@ -53,19 +53,19 @@ export function Card({ title, actions, children, className, icon }: { title?: Re
 
 const BADGE: Record<string, string> = {
   DRAFT: 'bg-slate-100 text-slate-700 ring-slate-200',
-  SCHEDULED: 'bg-sky-50 text-sky-800 ring-sky-200',
-  ACTIVE: 'bg-brand-50 text-brand-800 ring-brand-100',
-  FINALIZED: 'bg-navy text-white ring-navy',
+  SCHEDULED: 'bg-[#EEF4FA] text-sec1 ring-[#CFDFEE]',
+  ACTIVE: 'bg-[#EAF2EE] text-sec3 ring-[#C9DDD3]',
+  FINALIZED: 'bg-brand text-white ring-brand',
   CANCELLED: 'bg-red-50 text-red-700 ring-red-200',
-  PENDING: 'bg-amber-50 text-amber-800 ring-amber-200',
+  PENDING: 'bg-[#FFF3F0] text-[#B4483A] ring-[#FFD3CC]',
   RETRYING: 'bg-orange-50 text-orange-800 ring-orange-200',
-  SENT_TO_PROVIDER: 'bg-sky-50 text-sky-800 ring-sky-200',
-  DELIVERED: 'bg-brand-50 text-brand-800 ring-brand-100',
+  SENT_TO_PROVIDER: 'bg-[#EEF4FA] text-sec1 ring-[#CFDFEE]',
+  DELIVERED: 'bg-[#EAF2EE] text-sec3 ring-[#C9DDD3]',
   REJECTED: 'bg-red-50 text-red-700 ring-red-200',
   FAILED: 'bg-red-100 text-red-800 ring-red-300',
-  COMPLETED: 'bg-brand-50 text-brand-800 ring-brand-100',
-  STARTED: 'bg-amber-50 text-amber-800 ring-amber-200',
-  OTP_VERIFIED: 'bg-sky-50 text-sky-800 ring-sky-200',
+  COMPLETED: 'bg-[#EAF2EE] text-sec3 ring-[#C9DDD3]',
+  STARTED: 'bg-[#FFF3F0] text-[#B4483A] ring-[#FFD3CC]',
+  OTP_VERIFIED: 'bg-[#EEF4FA] text-sec1 ring-[#CFDFEE]',
   VOIDED: 'bg-red-50 text-red-700 ring-red-200',
 };
 
@@ -74,13 +74,13 @@ export function Badge({ status, children }: { status?: string; children: React.R
 }
 
 export function StatCard({ label, value, icon, tone = 'brand', hint }: { label: string; value: number | string; icon: React.ReactNode; tone?: 'brand' | 'navy' | 'amber' | 'red' | 'sky'; hint?: string }) {
-  const tones = { brand: 'bg-brand-50 text-brand', navy: 'bg-navy/10 text-navy', amber: 'bg-amber-50 text-amber-700', red: 'bg-red-50 text-red-600', sky: 'bg-sky-50 text-sky-700' };
+  const tones = { brand: 'bg-brand-50 text-brand', navy: 'bg-sand/60 text-navy', amber: 'bg-[#FFF3F0] text-[#D2604F]', red: 'bg-red-50 text-red-600', sky: 'bg-[#EAF2EE] text-sec3' };
   return (
     <div className="card flex items-center gap-4 p-4">
       <div className={clsx('flex h-11 w-11 shrink-0 items-center justify-center rounded-xl', tones[tone])}>{icon}</div>
       <div className="min-w-0">
         <p className="text-xs font-semibold uppercase leading-tight tracking-wide text-slate-500">{label}</p>
-        <p className="text-2xl font-bold text-navy">{value}</p>
+        <p className="text-2xl font-bold text-brand">{value}</p>
         {hint && <p className="text-xs text-slate-500">{hint}</p>}
       </div>
     </div>
@@ -110,7 +110,7 @@ export function Modal({ open, onClose, title, children, footer, wide }: { open: 
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-navy/50 p-0 sm:items-center sm:p-4" role="dialog" aria-modal="true" aria-label={title}>
       <div className={clsx('max-h-[92vh] w-full overflow-auto rounded-t-2xl bg-white shadow-2xl sm:rounded-2xl', wide ? 'sm:max-w-3xl' : 'sm:max-w-lg')}>
         <div className="sticky top-0 flex items-center justify-between border-b border-slate-100 bg-white px-5 py-4">
-          <h3 className="text-base font-bold text-navy">{title}</h3>
+          <h3 className="text-base font-bold text-brand">{title}</h3>
           <button onClick={onClose} aria-label="Cerrar" className="rounded p-1 text-slate-400 hover:bg-mist hover:text-navy">
             <X className="h-5 w-5" />
           </button>
@@ -145,12 +145,12 @@ export function Logo({ className }: { className?: string }) {
   return (
     <span className={clsx('inline-flex items-center gap-2 font-bold tracking-tight', className)}>
       <svg viewBox="0 0 32 32" className="h-7 w-7" aria-hidden>
-        <rect width="32" height="32" rx="8" fill="#176B52" />
+        <rect width="32" height="32" rx="8" fill="#40637D" />
         <path d="M8 8h6v6H8zM18 8h6v6h-6zM8 18h6v6H8z" fill="#fff" />
         <path d="M18.5 22.5c1.5-3 3-4.5 5.5-5" stroke="#fff" strokeWidth="2" fill="none" strokeLinecap="round" />
       </svg>
       <span>
-        Firma<span className="text-[#5FC79F]">QR</span>
+        Firma<span className="text-sec2">QR</span>
       </span>
     </span>
   );

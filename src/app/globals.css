@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root { color-scheme: light; }
-html, body { background: #F2F5F4; color: #172C3C; }
+html, body { background: #F4F2EF; color: #55606B; }
 body { font-feature-settings: 'cv11', 'ss01'; -webkit-font-smoothing: antialiased; }
 
 @layer components {
@@ -17,6 +17,9 @@ body { font-feature-settings: 'cv11', 'ss01'; -webkit-font-smoothing: antialiase
   .table-pro tbody td { @apply border-t border-slate-100 px-3 py-2.5 align-middle; }
   .table-pro tbody tr:hover { @apply bg-brand-50/40; }
 }
+
+/* Barra de color del Manual de Marca: Secundario 1, 4, 2, 3 y 5 (elemento decorativo). */
+.color-bar { background: linear-gradient(90deg, #5E8AB4 0 20%, #6FA287 20% 40%, #8DC8E8 40% 60%, #5C7F71 60% 80%, #FF8674 80% 100%); }
 
 @media print {
   aside, header, .no-print { display: none !important; }

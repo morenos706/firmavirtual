@@ -43,27 +43,33 @@ describe('Planilla oficial (formato 11020001F-01 V0.6)', () => {
   });
 
   it.each([
-    [1, 1],
-    [25, 1],
-    [26, 2],
-    [57, 2],
-    [58, 3],
-    [120, 4],
-  ])('%i participantes → %i página(s), 25 filas en la primera y 32 en las siguientes', (n, pages) => {
+    [1, 1, 1],
+    [25, 1, 2],
+    [26, 2, 2],
+    [57, 2, 3],
+    [58, 3, 3],
+    [120, 4, 5],
+  ])('%i participantes → %i página(s) de tabla y %i en total (con la salvedad jurídica al final)', (n, tablePages, total) => {
     const layout = computeSheetLayout(rows(n));
-    expect(layout).toHaveLength(pages);
+    expect(layout.filter((p) => p.rows.length > 0)).toHaveLength(tablePages);
+    expect(layout).toHaveLength(total);
     expect(layout[0].rows.length).toBeLessThanOrEqual(ROWS_FIRST_PAGE);
     layout.slice(1).forEach((p) => expect(p.rows.length).toBeLessThanOrEqual(ROWS_NEXT_PAGES));
     if (n >= 25) expect(layout[0].rows.filter((r) => r.row)).toHaveLength(25);
     const numbers = dataRows(layout).map((r) => r.number);
     expect(numbers).toEqual(Array.from({ length: n }, (_, i) => i + 1)); // numeración consecutiva, sin duplicar filas
-    // La última página se completa con filas vacías anuladas (como el formato impreso)
+    // La salvedad aparece una sola vez, en la última página, sin invadir la tabla ni el pie
+    const withNotice = layout.filter((p) => p.noticeTop !== undefined);
+    expect(withNotice).toHaveLength(1);
+    expect(layout.at(-1)!.noticeTop).toBeDefined();
     const last = layout.at(-1)!;
-    expect(last.rows.length).toBe(layout.length === 1 ? ROWS_FIRST_PAGE : ROWS_NEXT_PAGES);
+    const tableEnd = last.tableTop + 14.5 + last.rows.reduce((a, r) => a + r.height, 0);
+    if (last.rows.length) expect(last.noticeTop!).toBeGreaterThan(tableEnd);
   });
 
   it('57 participantes reproducen exactamente la distribución del documento de referencia (1-25 / 26-57)', () => {
     const layout = computeSheetLayout(rows(57));
+    expect(layout[2].rows).toHaveLength(0); // página adicional solo para la salvedad
     expect(layout[0].rows.map((r) => r.number)).toEqual(Array.from({ length: 25 }, (_, i) => i + 1));
     expect(layout[1].rows.map((r) => r.number)).toEqual(Array.from({ length: 32 }, (_, i) => i + 26));
     expect(layout.flatMap((p) => p.rows).every((r) => r.height === MIN_ROW_H)).toBe(true);
@@ -90,6 +96,11 @@ describe('Planilla oficial (formato 11020001F-01 V0.6)', () => {
     expect(pages).toBe(3);
     const pdf = await pdfParse(buffer);
     expect(pdf.numpages).toBe(3);
+    const flat = pdf.text.replace(/\s+/g, ' ');
+    for (const s of ['SALVEDAD SOBRE EL USO DE LA FIRMA ELECTRÓNICA', 'artículo 7 de la Ley 527 de 1999', 'Decreto 2364 de 2012', 'no acredita la identidad del firmante', 'No es una firma digital certificada', 'artículo 28', 'carece de validez', 'Ley 1581 de 2012', 'Empresa de Pruebas', 'https://firmaqr.test/verificar/DOC-AAAA-BBBB-CCCC', 'Total de asistentes con firma electrónica en esta planilla: 60']) {
+      expect(flat).toContain(s);
+    }
+    expect(flat.match(/Sujeta a la SALVEDAD/g)).toHaveLength(3); // referencia en cada página
     const t = pdf.text;
     for (const s of ['REGISTRO DE ASISTENCIA', 'Programa / Tema / Documento:', 'Formador:', 'Institución:', 'Interno:', 'Externo:', 'Fecha:', 'Hora Inicia', 'Hora Fin', 'Duración: (Horas)', 'Cédula', 'Nombre y Apellidos', 'Empresa', 'Gerencia', 'Área', 'Firma', '11020001F-01 V0.6', 'Programa / Tema / DOC-1', '10/11/26', 'SENA']) {
       expect(t).toContain(s);

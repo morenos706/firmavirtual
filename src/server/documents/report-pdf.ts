@@ -1,9 +1,10 @@
 import { F, createLetterDoc, drawLogo, renderToBuffer } from './pdf-common';
+import { BRAND, drawColorBar } from '@/lib/brand';
 import { METRIC_LABELS, type AttendanceExportRow, type ClosingMetrics } from './excel';
 
-const NAVY = '#172C3C';
-const GREEN = '#176B52';
-const MUTED = '#5b6b77';
+const NAVY = BRAND.azul;
+const GREEN = BRAND.sec3;
+const MUTED = BRAND.gris;
 
 export async function renderClosingReport(p: {
   companyName: string;
@@ -18,7 +19,7 @@ export async function renderClosingReport(p: {
   const W = 612 - 96;
   const newPage = () => {
     doc.addPage({ size: 'LETTER', margin: 0 });
-    doc.rect(0, 0, 612, 6).fill(GREEN);
+    drawColorBar(doc, 0, 0, 612, 6);
     drawLogo(doc, p.logo, p.companyName, { x: L, y: 22, w: 120, h: 30 });
     doc.font(F.bold).fontSize(13).fillColor(NAVY).text('INFORME DE CIERRE DE EVENTO', L, 30, { width: W, align: 'right' });
     doc.font(F.regular).fontSize(8).fillColor(MUTED).text(`Generado: ${p.generatedAt} · FirmaQR`, L, 47, { width: W, align: 'right' });
@@ -35,7 +36,7 @@ export async function renderClosingReport(p: {
   doc.font(F.bold).fontSize(9).fillColor('#FFFFFF').text('Indicador', L + 8, y + 5).text('Valor', L, y + 5, { width: W - 8, align: 'right' });
   y += 18;
   METRIC_LABELS.forEach(([k, label], i) => {
-    if (i % 2 === 0) doc.rect(L, y, W, 18).fill('#F2F5F4');
+    if (i % 2 === 0) doc.rect(L, y, W, 18).fill('#F4F2EF');
     doc.font(F.regular).fontSize(9).fillColor(NAVY).text(label, L + 8, y + 5);
     doc.font(F.bold).text(String(p.metrics[k]), L, y + 5, { width: W - 8, align: 'right' });
     y += 18;

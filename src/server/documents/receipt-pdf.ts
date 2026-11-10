@@ -1,5 +1,6 @@
 import { F, createLetterDoc, drawLogo, renderToBuffer } from './pdf-common';
 import { qrPng } from './qr';
+import { BRAND, drawColorBar } from '@/lib/brand';
 
 export type ReceiptData = {
   companyName: string;
@@ -38,10 +39,10 @@ export type ReceiptData = {
   footerNote?: string | null;
 };
 
-const NAVY = '#172C3C';
-const GREEN = '#176B52';
-const MUTED = '#5b6b77';
-const LINE = '#d5dedb';
+const NAVY = BRAND.azul;
+const GREEN = BRAND.azul;
+const MUTED = BRAND.gris;
+const LINE = '#D5DEE6';
 
 /** Comprobante individual de asistencia (PDF, carta, una página). */
 export async function renderReceipt(d: ReceiptData): Promise<Buffer> {
@@ -52,7 +53,7 @@ export async function renderReceipt(d: ReceiptData): Promise<Buffer> {
   const W = R - L;
 
   // Encabezado
-  doc.rect(0, 0, 612, 6).fill(GREEN);
+  drawColorBar(doc, 0, 0, 612, 6);
   drawLogo(doc, d.logo, d.companyName, { x: L, y: 26, w: 140, h: 38 });
   doc.font(F.bold).fontSize(10).fillColor(NAVY).text(d.companyName, L + 160, 30, { width: W - 160, align: 'right' });
   if (d.companyNit) doc.font(F.regular).fontSize(8.5).fillColor(MUTED).text(`NIT ${d.companyNit}`, L + 160, doc.y + 1, { width: W - 160, align: 'right' });
@@ -60,7 +61,7 @@ export async function renderReceipt(d: ReceiptData): Promise<Buffer> {
 
   doc.rect(L, 78, W, 40).fill(NAVY);
   doc.font(F.bold).fontSize(17).fillColor('#FFFFFF').text('COMPROBANTE DE ASISTENCIA', L + 16, 90, { lineBreak: false });
-  doc.font(F.regular).fontSize(8.5).fillColor('#cfe6dd').text(`No. ${d.record.evidenceCode}`, L, 95, { width: W - 16, align: 'right' });
+  doc.font(F.regular).fontSize(8.5).fillColor(BRAND.blanco).text(`No. ${d.record.evidenceCode}`, L, 95, { width: W - 16, align: 'right' });
 
   let y = 134;
   const section = (title: string) => {
@@ -136,12 +137,12 @@ export async function renderReceipt(d: ReceiptData): Promise<Buffer> {
   // QR de verificación
   const qx = L + leftW + 8;
   const qw = W - leftW - 8;
-  doc.roundedRect(qx, top, qw, 214, 6).fill('#F2F5F4');
+  doc.roundedRect(qx, top, qw, 214, 6).fill('#F4F2EF');
   doc.font(F.bold).fontSize(9).fillColor(NAVY).text('Verificación del documento', qx + 10, top + 12, { width: qw - 20, align: 'center' });
   const qrSize = Math.min(140, qw - 40);
   doc.image(await qrPng(d.verifyUrl, 500), qx + (qw - qrSize) / 2, top + 30, { width: qrSize });
   doc.font(F.regular).fontSize(7).fillColor(MUTED).text('Escanee el código o ingrese a:', qx + 10, top + 34 + qrSize, { width: qw - 20, align: 'center' });
-  doc.font(F.regular).fontSize(6.8).fillColor(GREEN).text(d.verifyUrl, qx + 10, doc.y + 1, { width: qw - 20, align: 'center' });
+  doc.font(F.regular).fontSize(6.8).fillColor(BRAND.sec1).text(d.verifyUrl, qx + 10, doc.y + 1, { width: qw - 20, align: 'center' });
   y = Math.max(y, top + 220) + 4;
 
   // Nota legal
@@ -155,6 +156,6 @@ export async function renderReceipt(d: ReceiptData): Promise<Buffer> {
       `Documento generado el ${d.generatedAt}. Evento ${d.event.code}.`,
     L, y + 6, { width: W, align: 'justify', lineGap: 0.5 },
   );
-  doc.rect(0, 786, 612, 6).fill(NAVY);
+  drawColorBar(doc, 0, 786, 612, 6);
   return renderToBuffer(doc);
 }

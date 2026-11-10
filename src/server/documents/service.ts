@@ -72,6 +72,7 @@ export async function buildSheet(eventId: string, opts: { draft: boolean; verifi
   const rows = await sheetRows(eventId, settings.sheetShowSignature);
   return renderAttendanceSheet({
     showSignature: settings.sheetShowSignature,
+    legalNotice: settings.sheetLegalNotice,
     companyName: settings.companyName,
     logo,
     formatCode: settings.formatCode,

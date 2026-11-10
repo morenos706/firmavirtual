@@ -16,7 +16,7 @@ export type AttendanceExportRow = {
   emailStatus?: string;
 };
 
-const HEADER_FILL: ExcelJS.Fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF172C3C' } };
+const HEADER_FILL: ExcelJS.Fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF40637D' } };
 
 function styleHeader(row: ExcelJS.Row) {
   row.eachCell((c) => {
@@ -30,7 +30,7 @@ function styleHeader(row: ExcelJS.Row) {
 export function eventInfoRows(ws: ExcelJS.Worksheet, ev: Record<string, string>) {
   for (const [k, v] of Object.entries(ev)) {
     const r = ws.addRow([k, v]);
-    r.getCell(1).font = { bold: true, color: { argb: 'FF176B52' } };
+    r.getCell(1).font = { bold: true, color: { argb: 'FF40637D' } };
   }
 }
 
@@ -101,7 +101,7 @@ export async function closingReportWorkbook(info: Record<string, string>, m: Clo
   const ws = wb.addWorksheet('Informe de cierre');
   ws.columns = [{ width: 60 }, { width: 70 }];
   const t = ws.addRow(['INFORME DE CIERRE DE EVENTO']);
-  t.font = { bold: true, size: 14, color: { argb: 'FF172C3C' } };
+  t.font = { bold: true, size: 14, color: { argb: 'FF40637D' } };
   ws.addRow([]);
   eventInfoRows(ws, info);
   ws.addRow([]);

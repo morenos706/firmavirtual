@@ -6,7 +6,7 @@ Los usuarios autorizados crean eventos y generan un código QR. Los participante
 
 | | |
 |---|---|
-| Frontend | Next.js 15 (App Router) · React 19 · TypeScript · Tailwind CSS |
+| Frontend | Next.js 15 (App Router) · React 19 · TypeScript · Tailwind CSS · identidad del Manual de Marca Prebel |
 | Backend | Rutas API de Next.js (Node.js 22) · validación Zod · permisos por rol en cada endpoint |
 | Base de datos | PostgreSQL 16 · Prisma ORM 6 · *triggers* de integridad |
 | Documentos | PDFKit (planilla, comprobantes, cartel QR, informe) · ExcelJS · qrcode · JSZip |
@@ -41,7 +41,8 @@ El usuario administrador inicial se define con `SEED_ADMIN_EMAIL` / `SEED_ADMIN_
 ## Documentación
 
 - [Arquitectura y modelo de datos](docs/ARQUITECTURA.md)
-- [Formato institucional de la planilla](docs/FORMATO_INSTITUCIONAL.md)
+- [Formato institucional de la planilla y salvedad jurídica](docs/FORMATO_INSTITUCIONAL.md)
+- [Identidad visual (Manual de Marca Prebel)](docs/IDENTIDAD_VISUAL.md)
 - [Manual de instalación](docs/INSTALACION.md)
 - [Manual de administración](docs/ADMINISTRACION.md)
 - [Guía de despliegue](docs/DESPLIEGUE.md)
