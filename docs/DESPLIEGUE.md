@@ -1,5 +1,17 @@
 # Guía de despliegue
 
+## Opción 0 — Vercel
+
+1. **Base de datos**: cree PostgreSQL en Vercel → Storage (Neon) o Supabase. Copie la URL *pooled* en `DATABASE_URL` y la URL *directa* (sin pooler) en `DIRECT_URL`.
+2. **Almacenamiento**: Vercel no conserva archivos en disco. Cree un bucket **privado** S3 compatible (AWS S3 o Cloudflare R2) y configure `STORAGE_DRIVER=s3` y `S3_*`. No use almacenamiento con URL públicas: las firmas y comprobantes contienen datos personales.
+3. **Variables** (Settings → Environment Variables): `DATABASE_URL`, `DIRECT_URL`, `APP_URL` (https://SU-PROYECTO.vercel.app), `APP_ENCRYPTION_KEY`, `HASH_PEPPER`, `OTP_SECRET`, `STORAGE_DRIVER`, `S3_*`, `EMAIL_PROVIDER` (recomendado `resend`), `EMAIL_API_KEY`, `EMAIL_FROM`, `EMAIL_FROM_NAME`, `EMAIL_WEBHOOK_SECRET`, `CRON_SECRET`.
+4. **Despliegue**: el script `vercel-build` ejecuta `prisma migrate deploy` antes de compilar (crea las tablas y los controles de integridad).
+5. **Carga inicial** (una vez, desde su computador, apuntando a la base de datos y al bucket de producción):
+   `DATABASE_URL=... DIRECT_URL=... STORAGE_DRIVER=s3 S3_...=... SEED_ADMIN_EMAIL=... SEED_ADMIN_PASSWORD=... npm run db:seed`
+6. **Verificación**: abra `https://SU-PROYECTO.vercel.app/api/health`; debe responder `"status":"ok"`. Si no, la lista `problems` indica qué falta.
+7. **Correos**: se envían al cerrar el evento con `after()`; los reintentos los procesa `/api/cron/email-queue` (en `vercel.json` una vez al día, límite del plan Hobby; en Pro cambie a `*/5 * * * *`) y también cada vez que se abre el panel de comprobantes o se pulsa *Procesar cola ahora*.
+8. El cierre de eventos grandes puede tardar: `vercel.json` asigna hasta 300 s a esa función (requiere Fluid Compute o plan Pro).
+
 ## Opción A — Docker Compose (servidor propio o VM en la nube)
 
 ```bash
