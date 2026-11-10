@@ -18,7 +18,7 @@
     "test:e2e": "tsx scripts/e2e.ts",
     "samples": "tsx scripts/generate-samples.ts",
     "postinstall": "prisma generate",
-    "vercel-build": "prisma generate && prisma migrate deploy && next build"
+    "vercel-build": "node scripts/vercel-build.mjs"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
