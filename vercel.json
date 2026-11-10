@@ -1,0 +1,20 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "regions": [
+    "gru1"
+  ],
+  "functions": {
+    "src/app/api/events/[id]/close/route.ts": {
+      "maxDuration": 300
+    },
+    "src/app/api/cron/email-queue/route.ts": {
+      "maxDuration": 300
+    }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/email-queue",
+      "schedule": "0 12 * * *"
+    }
+  ]
+}

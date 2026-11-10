@@ -24,7 +24,11 @@ const securityHeaders = [
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
-  serverExternalPackages: ['pdfkit', 'exceljs', 'nodemailer', 'bcryptjs', 'qrcode'],
+  serverExternalPackages: ['pdfkit', 'exceljs', 'nodemailer', 'bcryptjs', 'qrcode', '@aws-sdk/client-s3'],
+  // En Vercel las funciones solo incluyen los archivos rastreados: se agregan fuentes, logo y métricas de PDFKit.
+  outputFileTracingIncludes: {
+    '/**': ['./assets/fonts/**', './assets/brand/**', './node_modules/pdfkit/js/data/**'],
+  },
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }];
   },

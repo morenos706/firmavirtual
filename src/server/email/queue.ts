@@ -164,9 +164,8 @@ export async function processEmailQueue(opts: { batch?: number; maxBatches?: num
 }
 
 let running: Promise<number> | null = null;
-/** Dispara el procesamiento en segundo plano sin bloquear la petición (modo QUEUE_INLINE). */
-export function kickEmailQueue() {
-  if (!env.queueInline || running) return;
+function runInBackground() {
+  if (running) return running;
   running = processEmailQueue()
     .catch((e) => {
       console.error('[email-queue] error', e);
@@ -175,6 +174,22 @@ export function kickEmailQueue() {
     .finally(() => {
       running = null;
     });
+  return running;
+}
+
+/**
+ * Dispara el procesamiento de la cola sin bloquear la respuesta (modo QUEUE_INLINE).
+ * Dentro de una petición usa `after()` de Next.js: en entornos serverless (Vercel) la función
+ * permanece activa hasta terminar el envío. Fuera de una petición (worker, pruebas) se ejecuta en segundo plano.
+ */
+export async function kickEmailQueue() {
+  if (!env.queueInline) return;
+  try {
+    const { after } = await import('next/server');
+    after(() => runInBackground());
+  } catch {
+    void runInBackground();
+  }
 }
 
 /** Reenvío manual (solo ADMIN): crea un nuevo trabajo conservando el historial. */
@@ -205,7 +220,7 @@ export async function resendReceipt(recordId: string, actor: AuditActor & { user
     );
     return tx.emailJob.findUniqueOrThrow({ where: { idempotencyKey: r.key } });
   });
-  kickEmailQueue();
+  await kickEmailQueue();
   return job;
 }
 

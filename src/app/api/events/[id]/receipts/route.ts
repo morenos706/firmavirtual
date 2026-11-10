@@ -6,6 +6,7 @@ import { prisma } from '@/lib/db';
 import { Errors } from '@/lib/errors';
 import { loadEventFor } from '@/lib/permissions';
 import { getFile } from '@/lib/storage';
+import { kickEmailQueue } from '@/server/email/queue';
 
 export const dynamic = 'force-dynamic';
 /** Panel COMPROBANTES ENVIADOS (?download=zip descarga todos — solo administrador). */
@@ -23,6 +24,8 @@ export const GET = api<Ctx>(async (req, { params }) => {
     await audit(actorFrom(req, u), { action: 'RECEIPTS_DOWNLOADED', entityType: 'event', entityId: id, eventId: id, details: { count: docs.length } });
     return fileResponse(await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' }), `Comprobantes_${ev.code}.zip`, 'application/zip');
   }
+  // Procesamiento oportunista de la cola mientras alguien consulta el panel (útil en serverless).
+  await kickEmailQueue();
   const recs = await prisma.attendanceRecord.findMany({
     where: { eventId: id, status: 'COMPLETED' },
     include: {

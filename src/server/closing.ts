@@ -1,4 +1,3 @@
-import fs from 'node:fs/promises';
 import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { audit, systemActor, type AuditActor } from '@/lib/audit';
@@ -6,7 +5,7 @@ import type { SessionUser } from '@/lib/auth';
 import { canonicalJson, sha256 } from '@/lib/crypto';
 import { Errors } from '@/lib/errors';
 import { loadEventFor } from '@/lib/permissions';
-import { resolveSafe } from '@/lib/storage';
+import { getFile } from '@/lib/storage';
 import {
   MIME,
   buildAttendanceXlsx,
@@ -90,7 +89,7 @@ async function runClosingPipeline(eventId: string): Promise<ClosingReport> {
       continue;
     }
     try {
-      const img = await fs.readFile(resolveSafe(r.signature.imagePath));
+      const img = await getFile(r.signature.imagePath);
       if (sha256(img) !== r.signature.imageSha256) {
         inconsistencies.push({ evidenceCode: r.evidenceCode, problem: 'La imagen de la firma no coincide con su huella' });
         continue;
@@ -173,6 +172,6 @@ async function runClosingPipeline(eventId: string): Promise<ClosingReport> {
   await audit(systemActor, { action: 'EVENT_CLOSING_COMPLETED', entityType: 'event', entityId: eventId, eventId, details: report as unknown as Record<string, unknown> });
 
   // 9-10. El envío ocurre en la cola (no bloquea el cierre); cada intento queda registrado.
-  kickEmailQueue();
+  await kickEmailQueue();
   return report;
 }

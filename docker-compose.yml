@@ -18,6 +18,7 @@ services:
     env_file: .env
     environment:
       DATABASE_URL: postgresql://firmaqr:${POSTGRES_PASSWORD}@db:5432/firmaqr?schema=public
+      DIRECT_URL: postgresql://firmaqr:${POSTGRES_PASSWORD}@db:5432/firmaqr?schema=public
       STORAGE_DIR: /app/storage
     volumes: [storage:/app/storage]
     ports: ["127.0.0.1:3000:3000"]
@@ -28,6 +29,7 @@ services:
     env_file: .env
     environment:
       DATABASE_URL: postgresql://firmaqr:${POSTGRES_PASSWORD}@db:5432/firmaqr?schema=public
+      DIRECT_URL: postgresql://firmaqr:${POSTGRES_PASSWORD}@db:5432/firmaqr?schema=public
       STORAGE_DIR: /app/storage
     volumes: [storage:/app/storage]
     command: ["npx", "tsx", "scripts/worker.ts"]

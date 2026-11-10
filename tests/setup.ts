@@ -1,5 +1,7 @@
 process.env.DATABASE_URL = process.env.TEST_DATABASE_URL || 'postgresql://firmaqr:firmaqr@localhost:5432/firmaqr_test?schema=public';
+process.env.DIRECT_URL = process.env.DATABASE_URL;
 process.env.EMAIL_PROVIDER = 'mock';
+process.env.STORAGE_DRIVER = 'local';
 process.env.SMS_PROVIDER = 'console';
 process.env.STORAGE_DIR = './storage-test';
 process.env.QUEUE_INLINE = 'false';

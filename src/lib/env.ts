@@ -74,6 +74,6 @@ export const env = {
     return process.env.NODE_ENV === 'production';
   },
   get trustProxy() {
-    return process.env.TRUST_PROXY === 'true';
+    return process.env.TRUST_PROXY === 'true' || Boolean(process.env.VERCEL);
   },
 };

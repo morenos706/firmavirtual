@@ -4,6 +4,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { DEFAULT_DATA_TREATMENT, DEFAULT_SIGNATURE_AGREEMENT } from '../src/lib/legal-defaults';
+import { putFile } from '../src/lib/storage';
 
 const prisma = new PrismaClient();
 
@@ -16,9 +17,7 @@ async function main() {
   if (settings.companyName === 'Mi Empresa S.A.S.') await prisma.appSettings.update({ where: { id: 1 }, data: { companyName } });
   const brandLogo = path.join(process.cwd(), 'assets', 'brand', 'prebel-logo-azul.png');
   if (!settings.logoPath && process.env.SEED_SKIP_BRAND_LOGO !== 'true' && fs.existsSync(brandLogo)) {
-    const storage = path.resolve(process.env.STORAGE_DIR || './storage');
-    fs.mkdirSync(path.join(storage, 'branding'), { recursive: true });
-    fs.copyFileSync(brandLogo, path.join(storage, 'branding', 'prebel-logo-azul.png'));
+    await putFile('branding/prebel-logo-azul.png', fs.readFileSync(brandLogo)); // disco local o S3 según STORAGE_DRIVER
     await prisma.appSettings.update({ where: { id: 1 }, data: { logoPath: 'branding/prebel-logo-azul.png', logoMime: 'image/png' } });
     console.log('Logo institucional configurado (Manual de Marca Prebel).');
   }
