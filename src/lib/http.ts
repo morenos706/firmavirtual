@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { ZodError, type ZodSchema } from 'zod';
+import { ZodError, type ZodTypeAny, type infer as ZodInfer } from 'zod';
 import { AppError, Errors, isDbImmutableError } from './errors';
 import { rateLimit } from './rate-limit';
 import { env } from './env';
@@ -54,7 +54,7 @@ export function enforceRateLimit(req: Request, scope: string, limit: number, win
   if (!r.ok) throw Errors.tooMany();
 }
 
-export async function parseJson<T>(req: Request, schema: ZodSchema<T>): Promise<T> {
+export async function parseJson<S extends ZodTypeAny>(req: Request, schema: S): Promise<ZodInfer<S>> {
   let body: unknown;
   try {
     body = await req.json();
@@ -104,4 +104,17 @@ export function errorResponse(e: unknown) {
   }
   console.error('[api] error no controlado', e);
   return json({ error: { code: 'INTERNAL', message: 'Error interno del servidor.' } }, 500);
+}
+
+export type Ctx<P extends string = 'id'> = { params: Promise<Record<P, string>> };
+
+export function fileResponse(buf: Buffer, fileName: string, mime: string, inline = false) {
+  return new Response(new Uint8Array(buf), {
+    headers: {
+      'Content-Type': mime,
+      'Content-Disposition': `${inline ? 'inline' : 'attachment'}; filename="${fileName.replace(/[^\w.\-]/g, '_')}"`,
+      'Cache-Control': 'private, no-store',
+      'X-Content-Type-Options': 'nosniff',
+    },
+  });
 }
