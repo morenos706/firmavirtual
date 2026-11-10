@@ -1,0 +1,12 @@
+node_modules
+.next
+out
+.env
+.env.local
+.env.test
+storage/*
+!storage/.gitkeep
+test-results
+*.tsbuildinfo
+backups
+storage-test
