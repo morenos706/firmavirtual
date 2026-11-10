@@ -119,6 +119,25 @@ describe('Registro de participantes, OTP y firma', () => {
     expect(s.registrationToken).toBeTruthy();
   });
 
+  it('celular: el campo aparece y es obligatorio con OTP por SMS, y acepta guiones/espacios/paréntesis', async () => {
+    const org = await makeUser('ORGANIZER');
+    // El formulario envía el celular desactivado aunque el canal sea SMS (caso reportado)
+    const { token } = await activeEvent(org, {
+      otpChannel: 'SMS',
+      fields: [{ key: 'phone', label: 'Número de celular', enabled: false, required: false, order: 7 }],
+    });
+    const pub = await getPublicEvent(token);
+    expect(pub.fields.find((f) => f.key === 'phone')).toMatchObject({ required: true });
+    const s = await startRegistration(token, { documentNumber: '7777777', fullName: 'Rosa Gil', email: 'r@x.co', company: 'a', management: 'b', area: 'c', phone: '(300) 123-4567' }, meta);
+    expect(s.otp.channel).toBe('SMS');
+    // Con correo como canal y celular opcional habilitado
+    const { token: t2 } = await activeEvent(org, { fields: [{ key: 'phone', label: 'Celular', enabled: true, required: false, order: 7 }] });
+    expect((await getPublicEvent(t2)).fields.map((f) => f.key)).toContain('phone');
+    await expect(startRegistration(t2, { documentNumber: '8888881', fullName: 'Rosa Gil', email: 'r2@x.co', company: 'a', management: 'b', area: 'c', phone: '300 12' }, meta)).rejects.toThrow();
+    const ok = await startRegistration(t2, { documentNumber: '8888882', fullName: 'Rosa Gil', email: 'r3@x.co', company: 'a', management: 'b', area: 'c', phone: '+57 300 123 4567' }, meta);
+    expect(ok.otp.channel).toBe('EMAIL');
+  });
+
   it('OTP por SMS cuando el evento lo exige', async () => {
     const { smsOutbox } = await import('@/server/sms');
     const org = await makeUser('ORGANIZER');

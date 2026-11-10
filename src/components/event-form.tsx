@@ -149,10 +149,11 @@ export function EventForm({ eventId, initial, status, isAdmin }: { eventId?: str
         <Card title="Registro de participantes">
           <div className="grid gap-4 md:grid-cols-3">
             <Field label="Verificación OTP" hint="Código de un solo uso para autenticar al firmante.">
-              <select className="input" value={v.otpChannel} onChange={(e) => set('otpChannel', e.target.value as 'EMAIL' | 'SMS')}>
+              <select className="input" value={v.otpChannel} onChange={(e) => { const c = e.target.value as 'EMAIL' | 'SMS'; setV((x) => ({ ...x, otpChannel: c, fields: c === 'SMS' ? x.fields.map((f) => (f.key === 'phone' ? { ...f, enabled: true, required: true } : f)) : x.fields })); }}>
                 <option value="EMAIL">Correo electrónico</option>
                 <option value="SMS">SMS al celular</option>
               </select>
+              {v.otpChannel === 'SMS' && <span className="mt-1 block text-xs text-[#B4483A]">Requiere un proveedor de SMS (Twilio) configurado; si no, use correo electrónico.</span>}
             </Field>
             <Field label="Control de duplicados">
               <select className="input" value={v.duplicateRule} onChange={(e) => set('duplicateRule', e.target.value as EventFormValues['duplicateRule'])}>

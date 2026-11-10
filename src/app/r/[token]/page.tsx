@@ -188,11 +188,12 @@ export default function RegisterPage({ params }: { params: Promise<{ token: stri
                     <input
                       className="input text-base"
                       type={INPUT_TYPES[f.key] ?? 'text'}
-                      inputMode={f.key === 'documentNumber' || f.key === 'phone' ? 'numeric' : undefined}
+                      inputMode={f.key === 'documentNumber' ? 'numeric' : f.key === 'phone' ? 'tel' : undefined}
                       autoComplete={f.key === 'email' ? 'email' : f.key === 'fullName' ? 'name' : f.key === 'phone' ? 'tel' : 'off'}
                       value={form[f.key] ?? ''}
                       onChange={(e) => setForm((x) => ({ ...x, [f.key]: e.target.value }))}
-                      maxLength={f.key === 'documentNumber' ? 20 : 150}
+                      maxLength={f.key === 'documentNumber' ? 20 : f.key === 'phone' ? 20 : 150}
+                      placeholder={f.key === 'phone' ? '3001234567' : undefined}
                     />
                     {errors[f.key] && <span className="mt-1 block text-xs text-red-600">{errors[f.key]}</span>}
                   </label>

@@ -61,7 +61,10 @@ export async function getPublicEvent(token: string) {
       otpChannel: ev.otpChannel,
       requireDataConsent: ev.requireDataConsent,
     },
-    fields: ev.fields.filter((f) => f.enabled).map((f) => ({ key: f.key, label: f.label, required: f.required })),
+    // Con OTP por SMS el celular se muestra y es obligatorio aunque el evento lo tenga desactivado (eventos antiguos).
+    fields: ev.fields
+      .filter((f) => f.enabled || (f.key === 'phone' && ev.otpChannel === 'SMS'))
+      .map((f) => ({ key: f.key, label: f.label, required: f.required || (f.key === 'phone' && ev.otpChannel === 'SMS') })),
     legal: {
       agreement: legal.agreement && {
         id: legal.agreement.id,
@@ -100,7 +103,7 @@ export async function startRegistration(token: string, rawInput: unknown, meta: 
   const docHash = blindIndex(`doc:${docNorm}`);
   const emailNorm = normalizeEmail(input.email);
   const pick = (k: 'company' | 'management' | 'area') => (enabled.get(k)?.enabled ? normalizeName(input[k] ?? '') || null : null);
-  const phone = enabled.get('phone')?.enabled || ev.otpChannel === 'SMS' ? (input.phone || '').replace(/\s/g, '') || null : null;
+  const phone = enabled.get('phone')?.enabled || ev.otpChannel === 'SMS' ? input.phone || null : null;
 
   // Control de duplicados según las reglas del evento
   const existing = await prisma.attendanceRecord.findFirst({

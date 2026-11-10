@@ -15,13 +15,15 @@ const EVIDENCE_FIELDS = [
 /** Campos que un ADMIN puede corregir después del cierre (con justificación auditada). */
 const POST_CLOSE_CORRECTABLE = ['description', 'location'] as const;
 
-function normalizeFields(fields: EventInput['fields']) {
+function normalizeFields(fields: EventInput['fields'], otpChannel: EventInput['otpChannel'] = 'EMAIL') {
   const base = new Map(DEFAULT_FIELDS.map((f) => [f.key, { ...f }]));
   for (const f of fields ?? []) {
     const cur = base.get(f.key as never);
     if (cur) Object.assign(cur, { label: f.label, enabled: f.enabled, required: f.enabled && f.required, order: f.order });
   }
   for (const k of FIXED_FIELDS) Object.assign(base.get(k)!, { enabled: true, required: true });
+  // Con verificación por SMS el celular siempre se solicita y es obligatorio.
+  if (otpChannel === 'SMS') Object.assign(base.get('phone')!, { enabled: true, required: true });
   return [...base.values()];
 }
 
@@ -42,7 +44,7 @@ async function resolveOrganizer(user: SessionUser, organizerId?: string) {
 
 export async function createEvent(user: SessionUser, input: EventInput, actor: AuditActor) {
   const organizerId = await resolveOrganizer(user, input.organizerId);
-  const fields = normalizeFields(input.fields);
+  const fields = normalizeFields(input.fields, input.otpChannel);
   for (let attempt = 0; attempt < 5; attempt++) {
     try {
       return await prisma.$transaction(async (tx) => {
@@ -138,7 +140,7 @@ export async function updateEvent(
 
   const organizerId = input.organizerId ? await resolveOrganizer(user, input.organizerId) : ev.organizerId;
   if (organizerId !== ev.organizerId) diff.organizerId = { from: ev.organizerId, to: organizerId };
-  const fields = input.fields ? normalizeFields(input.fields) : null;
+  const fields = input.fields || input.otpChannel === 'SMS' ? normalizeFields(input.fields, input.otpChannel) : null;
 
   return prisma.$transaction(async (tx) => {
     const updated = await tx.event.update({

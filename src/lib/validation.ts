@@ -77,12 +77,15 @@ export const registrationSchema = z.object({
   company: z.string().trim().max(150).optional().nullable(),
   management: z.string().trim().max(150).optional().nullable(),
   area: z.string().trim().max(150).optional().nullable(),
-  phone: z
-    .string()
-    .trim()
-    .regex(/^\+?[0-9 ]{7,15}$/, 'Número de celular inválido')
-    .optional()
-    .nullable()
-    .or(z.literal('')),
+  // Celular: se aceptan espacios, guiones, puntos y paréntesis; se guarda solo con dígitos (y + inicial).
+  phone: z.preprocess(
+    (v) => (typeof v === 'string' ? v.replace(/[\s\-().]/g, '') : v),
+    z
+      .string()
+      .regex(/^\+?\d{7,15}$/, 'Número de celular inválido (use 10 dígitos, p. ej. 3001234567)')
+      .optional()
+      .nullable()
+      .or(z.literal('')),
+  ),
 });
 export type RegistrationInput = z.infer<typeof registrationSchema>;
