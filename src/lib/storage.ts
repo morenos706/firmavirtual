@@ -9,8 +9,9 @@ import { sha256 } from './crypto';
  *
  * Controladores (STORAGE_DRIVER):
  *  - local: disco (STORAGE_DIR). Servidores propios / Docker.
- *  - s3:    bucket S3 compatible y privado (AWS S3, Cloudflare R2, Supabase Storage, MinIO…).
- *           Obligatorio en Vercel, cuyo disco es efímero.
+ *  - s3:    bucket S3 compatible y privado (AWS S3, Cloudflare R2, MinIO…).
+ *  - supabase: bucket PRIVADO de Supabase Storage (API REST con la clave service_role, solo en el servidor).
+ *  En Vercel (disco efímero) debe usarse s3 o supabase.
  */
 type Driver = {
   put(rel: string, data: Buffer, contentType?: string): Promise<void>;
@@ -18,8 +19,9 @@ type Driver = {
   exists(rel: string): Promise<boolean>;
 };
 
-export function storageDriverName(): 'local' | 's3' {
-  return (process.env.STORAGE_DRIVER || 'local').toLowerCase() === 's3' ? 's3' : 'local';
+export function storageDriverName(): 'local' | 's3' | 'supabase' {
+  const d = (process.env.STORAGE_DRIVER || 'local').toLowerCase();
+  return d === 's3' || d === 'supabase' ? d : 'local';
 }
 
 /** Detecta configuraciones que perderían documentos (p. ej. disco local en Vercel). */
@@ -28,6 +30,8 @@ export function storageProblem(): string | null {
     return 'En Vercel el disco es efímero: configure STORAGE_DRIVER=s3 y las variables S3_* (bucket privado).';
   if (storageDriverName() === 's3' && (!process.env.S3_BUCKET || !process.env.S3_ACCESS_KEY_ID || !process.env.S3_SECRET_ACCESS_KEY))
     return 'Faltan variables S3_BUCKET, S3_ACCESS_KEY_ID o S3_SECRET_ACCESS_KEY.';
+  if (storageDriverName() === 'supabase' && (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY))
+    return 'Faltan variables SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY.';
   return null;
 }
 
@@ -109,10 +113,42 @@ async function s3Driver(): Promise<Driver> {
   return s3Cache;
 }
 
+/** Supabase Storage (bucket privado). La clave service_role nunca sale del servidor. */
+function supabaseDriver(): Driver {
+  const base = (process.env.SUPABASE_URL || '').replace(/\/$/, '') + '/storage/v1/object';
+  const bucket = process.env.SUPABASE_BUCKET || 'firmaqr';
+  const prefix = (process.env.SUPABASE_PREFIX ?? 'firmaqr/').replace(/^\/+/, '');
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+  const headers = { Authorization: `Bearer ${key}`, apikey: key };
+  const url = (rel: string) => `${base}/${bucket}/${(prefix + cleanKey(rel)).split('/').map(encodeURIComponent).join('/')}`;
+  const authUrl = (rel: string) => `${base}/authenticated/${bucket}/${(prefix + cleanKey(rel)).split('/').map(encodeURIComponent).join('/')}`;
+  return {
+    async put(rel, data, contentType) {
+      const res = await fetch(url(rel), {
+        method: 'POST',
+        headers: { ...headers, 'Content-Type': contentType ?? 'application/octet-stream', 'x-upsert': 'true', 'cache-control': 'no-store' },
+        body: new Uint8Array(data),
+      });
+      if (!res.ok) throw new Error(`Supabase Storage (subida) HTTP ${res.status}: ${(await res.text()).slice(0, 200)}`);
+    },
+    async get(rel) {
+      const res = await fetch(authUrl(rel), { headers, cache: 'no-store' });
+      if (!res.ok) throw new Error(`Supabase Storage (descarga) HTTP ${res.status}`);
+      return Buffer.from(await res.arrayBuffer());
+    },
+    async exists(rel) {
+      const res = await fetch(authUrl(rel), { headers: { ...headers, Range: 'bytes=0-0' }, cache: 'no-store' });
+      await res.body?.cancel().catch(() => {});
+      return res.ok;
+    },
+  };
+}
+
 async function driver(): Promise<Driver> {
   const problem = storageProblem();
   if (problem) throw new Error(`Almacenamiento no configurado: ${problem}`);
-  return storageDriverName() === 's3' ? s3Driver() : localDriver;
+  const d = storageDriverName();
+  return d === 's3' ? s3Driver() : d === 'supabase' ? supabaseDriver() : localDriver;
 }
 
 const MIME: Record<string, string> = { pdf: 'application/pdf', png: 'image/png', jpg: 'image/jpeg', json: 'application/json', html: 'text/html', xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' };

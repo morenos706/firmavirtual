@@ -10,6 +10,10 @@
 3. *Storage* → *New bucket* `firmaqr` (**privado**, sin marcar *Public*).
 4. *Project Settings → Storage → S3 Connection* → *New access key*. Copie *Endpoint*, *Region*, *Access key ID* y *Secret access key*.
 
+> Alternativa sin llaves S3: `STORAGE_DRIVER=supabase`, `SUPABASE_URL=https://<ref>.supabase.co`, `SUPABASE_SERVICE_ROLE_KEY` (Project Settings → API → service_role; solo servidor) y `SUPABASE_BUCKET=firmaqr`.
+>
+> Seguridad en Supabase: ejecute una vez `REVOKE ALL ON ALL TABLES IN SCHEMA public FROM anon, authenticated;` (y lo mismo para secuencias, funciones y privilegios por defecto) y active RLS en las tablas, para que la Data API pública no exponga datos. La aplicación se conecta como `postgres` (propietario), que no se ve afectado.
+
 **Vercel** → Settings → Environment Variables:
 `DATABASE_URL`, `DIRECT_URL`, `APP_URL`, `APP_ENCRYPTION_KEY`, `HASH_PEPPER`, `OTP_SECRET`, `CRON_SECRET`, `SETUP_TOKEN`,
 `STORAGE_DRIVER=s3`, `S3_BUCKET=firmaqr`, `S3_ENDPOINT` (https://<ref>.supabase.co/storage/v1/s3), `S3_REGION`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_FORCE_PATH_STYLE=true`, y el proveedor de correo.
